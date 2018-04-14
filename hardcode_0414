@@ -2216,14 +2216,16 @@ void hardcodeValue(String str):
   Token t1=null;
 }
 {
-  (LOOKAHEAD("(") "(" VariableDeclaratorId() ("," t1=< IDENTIFIER > { sung3.add(t1.image); } )*|("," <STRING_LITERAL> {  System.out.println("HardcodePrevent Err"); } )*")" )*
+  (LOOKAHEAD("(") "(" VariableDeclaratorId() ("," (t1=< IDENTIFIER > { sung3.add(t1.image); }|t1=<STRING_LITERAL> { sung3.add(t1.image); System.out.println("STRING_LITERAL Hardcode err"); })  )* ")" )*
  {
-   for(int i=0; i<sung2.size(); i++) { 
-	   if((sung3.get(1)).equals(sung2.get(i)))
-	   {
-	     System.out.println("search success!!");
-	     System.out.println(sung3.get(1));
-	   }
-  }
-  }
+   if(sung3.get(1)!=null) {
+     for(int i=0; i<sung2.size(); i++) {
+	     if((sung3.get(1)).equals(sung2.get(i)))
+	     {
+	       System.out.println("VRIABLE Hardcode err");
+	       System.out.println(sung3.get(1));
+	     }
+     }
+   }
+}
 }
