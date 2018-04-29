@@ -47,8 +47,8 @@ import java.awt.List;
 public class JavaParser
 {
 
-  ArrayList<String> VariableIdList= new ArrayList<String>();
-  ArrayList<String> sung3= new ArrayList<String>();
+  ArrayList<String> VariableIdList= new ArrayList<String>();  // 변수명 저장 배열리스트
+  ArrayList<String> hardCodeArr= new ArrayList<String>(); // 하드코드에서 해당 변수명 있는지 비교하기위한 배열
   ArrayList<String> sqlArr= new ArrayList<String>();
    /**
     * Class to hold modifiers.
@@ -1294,6 +1294,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
       ConstructorDeclaration()
     |
       LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) )
+      
       FieldDeclaration(modifiers)
     |
       MethodDeclaration(modifiers)
@@ -1306,20 +1307,21 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 //qwer
 void FieldDeclaration(int modifiers):
 {
-  int a;
+  Token t1=null;
 }
 {
   // Modifiers are already matched in the caller
   //FieldPrevent Err
+
+  
+  Type() VariableDeclarator() ( "," VariableDeclarator() )* t1=";"
   {
-    a=modifiers;
-    if(a==1)
+    if(modifiers==1||modifiers==17)  //1은 static이 안붙은 public,   17은 static public
     {
-            System.out.println("FieldPrevent Err");
+      System.out.println(t1.beginLine + " Column: "+"Field Prevention err");
     }
-    
   }
-  Type() VariableDeclarator() ( "," VariableDeclarator() )* ";"
+ 
 
 }
 
@@ -1457,12 +1459,13 @@ Token t1;
     {
       if(((t1.next).image).equals("(")) { }
       else { 
-         System.out.println("RandomPrevent err"); }
+         System.out.println(t1.beginLine+ " Column: " + "RandomPrevent err"); }
     }
     //NullPointerExPrevent err
     if((t1.image).equals("NullPointerException")||(t1.image).equals("RuntimeException")||(t1.image).equals("Throwable"))
     {
-      System.out.println("NullPointerExPrevent err");
+      System.out.println();
+      System.out.println(t1.beginLine+ " Column: " + "NullPointerExPrevent err");
     }
         
          
@@ -1538,7 +1541,7 @@ void Name():
   str1=<IDENTIFIER> ( LOOKAHEAD(2) "." str2=<IDENTIFIER>{
     if((str2.image).equals("getConnection"))
     {
-      hardcodeValue(str2.image);
+      //hardcodeValue(str2.image);
     }
     if((str2.image).equals("executeQuery"))
     {
@@ -2220,11 +2223,11 @@ void hardcodeValue(String str):
   Token t1=null;
 }
 {
-  (LOOKAHEAD("(") "(" VariableDeclaratorId() ("," (t1=< IDENTIFIER > { sung3.add(t1.image); }|t1=<STRING_LITERAL> { sung3.add(t1.image); System.out.println("STRING_LITERAL Hardcode err"); })  )* ")" )*
- {
-   if(sung3.get(1)!=null) {
+  (LOOKAHEAD("(") "(" VariableDeclaratorId() ("," (t1=< IDENTIFIER > { hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL> { hardCodeArr.add(t1.image); System.out.println("STRING_LITERAL Hardcode err"); })  )* ")" )*
+ 
+   if(hardCodeArr.get(1)!=null) {
      for(int i=0; i<VariableIdList.size(); i++) {
-	     if((sung3.get(1)).equals(VariableIdList.get(i)))
+	     if((hardCodeArr.get(1)).equals(VariableIdList.get(i)))
 	     {
 	       System.out.println("VARIABLE Hardcode err");
 	     }
