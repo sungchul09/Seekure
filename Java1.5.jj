@@ -1319,7 +1319,7 @@ void FieldDeclaration(int modifiers):
   {
     if(modifiers==1||modifiers==17)  //1은 static이 안붙은 public,   17은 static public
     {
-      System.out.println("Field Preventionion Err"+"(Column: "+t1.beginLine+ ")" );
+      System.out.println("Field Preventionion Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)" );
     }
   }
  
@@ -1460,12 +1460,12 @@ Token t1;
     {
       if(((t1.next).image).equals("(")) { }
       else { 
-         System.out.println("Random Prevention Err"+"(Column: "+t1.beginLine+ ")"); }
+         System.out.println("Random Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)"); }
     }
     //NullPointerEx Prevention err
     if((t1.image).equals("NullPointerException")||(t1.image).equals("RuntimeException")||(t1.image).equals("Throwable"))
     {
-      System.out.println("NullPointerEx Prevention Err"+"(Column: "+t1.beginLine+ ")");
+      System.out.println("NullPointerEx Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)");
     }
         
          
@@ -2225,13 +2225,19 @@ void hardcodeValue(String str):
   int cnt=0;
 }
 {
-  (LOOKAHEAD("(") "(" (t1=< IDENTIFIER > { hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL>{ hardCodeArr.add(t1.image); } )*("," (t1=< IDENTIFIER >{ hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL> { hardCodeArr.add(t1.image); System.out.println("STRING_LITERAL Hardcode Prevention Err" + "(Column: "+t1.beginLine+")"); })  )* ")" )*
+  (LOOKAHEAD("(") "(" (t1=< IDENTIFIER > { hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL>{ hardCodeArr.add(t1.image); } )*
+  ("," (t1=< IDENTIFIER >{ hardCodeArr.add(t1.image); }|
+  t1=<STRING_LITERAL> { hardCodeArr.add(t1.image); System.out.println("STRING_LITERAL Hardcode Prevention Err" + "(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+ ",String "+t1.image+")"); })  )* ")" )*
  {
    if(hardCodeArr.get(2)!=null) {
      for(int i=0; i<VariableIdList.size(); i++) {
-	     if((hardCodeArr.get(2)).equals(VariableIdList.get(i))||(hardCodeArr.get(1)).equals(VariableIdList.get(i)))
+	     if((hardCodeArr.get(1)).equals(VariableIdList.get(i)))
 	     {
-	       System.out.println("VARIABLE Hardcode Prevention Err"+ "(Column: "+t1.beginLine+")");
+	       System.out.println("VARIABLE Hardcode Prevention Err"+ "(at Line "+t1.beginLine+ ". Variable: "+hardCodeArr.get(1)+")");
+	     }
+	     if((hardCodeArr.get(2)).equals(VariableIdList.get(i)))
+	     {
+	       System.out.println("VARIABLE Hardcode Prevention Err"+ "(at Line "+t1.beginLine+ ". Variable: "+hardCodeArr.get(2)+")");
 	     }
      }
    }
@@ -2250,7 +2256,7 @@ void SQLValue(Token t1):
 		    		if((sqlArr.get(j)).equals(VariableIdList.get(i))) 
 				// VariableIdList(변수명 리스트) 중에 sqlArr(쿼리문 중 변수로 의심되는 <IDENTIFIER >를 저장한 배열리스트)와 일치하는 변수명이 있다면
 			     {
-			       System.out.println("SQL Prevention Err"+"(Column: "+t1.beginLine+ ")"); // 쿼리문 내부에 변수가 사용된 것이므로 SQL Prevention Err
+			       System.out.println("SQL Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)"); // 쿼리문 내부에 변수가 사용된 것이므로 SQL Prevention Err
 			       count++;
 			       break;
 			     }
