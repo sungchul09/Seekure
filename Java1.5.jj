@@ -48,6 +48,7 @@ public class JavaParser
 {
 
   ArrayList<String> VariableIdList= new ArrayList<String>();  // 변수명 저장 배열리스트
+  ArrayList<String> strIdList= new ArrayList<String>();  // 문자열 변수명 저장 배열리스트
   ArrayList<String> hardCodeArr= new ArrayList<String>(); // 하드코드에서 해당 변수명 있는지 비교하기위한 배열
   ArrayList<String> sqlArr= new ArrayList<String>();
    /**
@@ -1311,14 +1312,14 @@ void FieldDeclaration(int modifiers):
 }
 {
   // Modifiers are already matched in the caller
-  //FieldPrevent Err
+  //FieldPrevention Err
 
   
   Type() VariableDeclarator() ( "," VariableDeclarator() )* t1=";"
   {
     if(modifiers==1||modifiers==17)  //1은 static이 안붙은 public,   17은 static public
     {
-      System.out.println(t1.beginLine + " Column: "+"Field Prevention err");
+      System.out.println("Field Preventionion Err"+"(Column: "+t1.beginLine+ ")" );
     }
   }
  
@@ -1454,18 +1455,17 @@ Token t1;
   t1=<IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
   ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
   {
-    //RandomPrevent err
+    //Random Prevention err
     if((t1.image).equals("Random"))
     {
       if(((t1.next).image).equals("(")) { }
       else { 
-         System.out.println(t1.beginLine+ " Column: " + "RandomPrevent err"); }
+         System.out.println("Random Prevention Err"+"(Column: "+t1.beginLine+ ")"); }
     }
-    //NullPointerExPrevent err
+    //NullPointerEx Prevention err
     if((t1.image).equals("NullPointerException")||(t1.image).equals("RuntimeException")||(t1.image).equals("Throwable"))
     {
-      System.out.println();
-      System.out.println(t1.beginLine+ " Column: " + "NullPointerExPrevent err");
+      System.out.println("NullPointerEx Prevention Err"+"(Column: "+t1.beginLine+ ")");
     }
         
          
@@ -1541,11 +1541,11 @@ void Name():
   str1=<IDENTIFIER> ( LOOKAHEAD(2) "." str2=<IDENTIFIER>{
     if((str2.image).equals("getConnection"))
     {
-      //hardcodeValue(str2.image);
+      hardcodeValue(str2.image);
     }
     if((str2.image).equals("executeQuery"))
     {
-      SQLValue(str2.image); //executeQuery라는 <IDENTIFIER >가 감지되면 SQLValue로 이동 
+      SQLValue(str2); //executeQuery라는 <IDENTIFIER >가 감지되면 SQLValue로 이동 
     }
   })* 
   
@@ -1799,8 +1799,9 @@ void Literal():
   <FLOATING_POINT_LITERAL>
 |
   <CHARACTER_LITERAL>
-|
-  <STRING_LITERAL> ( "+" (< STRING_LITERAL > | t1=< IDENTIFIER >{ sqlArr.add(t1.image); })+ )*
+|//String a= VariableIdList.get(0);
+    
+      t1=<STRING_LITERAL>( "+" (< STRING_LITERAL > | t1=< IDENTIFIER > { sqlArr.add(t1.image); } )+ )*
   // 변수 선언 = 값 에서 값에 해당하는 부분.
   // <STRING_LITERAL >은 그 값 부분이 문자열 리터럴 타입일 경우이다.
   // <STRING_LITERAL > 이후 ( )* 의 내용은 쿼리문이 나올 경우를 나타낸 것으로써 <IDENTIFIER > 가 나타나면  sqlArr에 저장해놓는다.
@@ -2221,22 +2222,23 @@ void DefaultValue():
 void hardcodeValue(String str):
 {
   Token t1=null;
+  int cnt=0;
 }
 {
-  (LOOKAHEAD("(") "(" VariableDeclaratorId() ("," (t1=< IDENTIFIER > { hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL> { hardCodeArr.add(t1.image); System.out.println("STRING_LITERAL Hardcode err"); })  )* ")" )*
- 
-   if(hardCodeArr.get(1)!=null) {
+  (LOOKAHEAD("(") "(" (t1=< IDENTIFIER > { hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL>{ hardCodeArr.add(t1.image); } )*("," (t1=< IDENTIFIER >{ hardCodeArr.add(t1.image); }|t1=<STRING_LITERAL> { hardCodeArr.add(t1.image); System.out.println("STRING_LITERAL Hardcode Prevention Err" + "(Column: "+t1.beginLine+")"); })  )* ")" )*
+ {
+   if(hardCodeArr.get(2)!=null) {
      for(int i=0; i<VariableIdList.size(); i++) {
-	     if((hardCodeArr.get(1)).equals(VariableIdList.get(i)))
+	     if((hardCodeArr.get(2)).equals(VariableIdList.get(i))||(hardCodeArr.get(1)).equals(VariableIdList.get(i)))
 	     {
-	       System.out.println("VARIABLE Hardcode err");
+	       System.out.println("VARIABLE Hardcode Prevention Err"+ "(Column: "+t1.beginLine+")");
 	     }
      }
    }
 }
 }
 
-void SQLValue(String str):
+void SQLValue(Token t1):
 {
 }
 {
@@ -2248,7 +2250,7 @@ void SQLValue(String str):
 		    		if((sqlArr.get(j)).equals(VariableIdList.get(i))) 
 				// VariableIdList(변수명 리스트) 중에 sqlArr(쿼리문 중 변수로 의심되는 <IDENTIFIER >를 저장한 배열리스트)와 일치하는 변수명이 있다면
 			     {
-			       System.out.println("SQL Prevent Err"); // 쿼리문 내부에 변수가 사용된 것이므로 SQL Prevent Err
+			       System.out.println("SQL Prevention Err"+"(Column: "+t1.beginLine+ ")"); // 쿼리문 내부에 변수가 사용된 것이므로 SQL Prevention Err
 			       count++;
 			       break;
 			     }
