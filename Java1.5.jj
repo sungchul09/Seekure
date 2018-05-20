@@ -1,3 +1,7 @@
+//wrap() 또는 duplicate() 메서드를 사용하여 만든 버퍼를 신뢰할 수 없는 코드에 노출시키지 마시오.
+//스트림에서 읽은 문자나 바이트를 –1과 구분하라.
+//xml
+//빼고 완료된 코드
 /* Copyright (c) 2006, Sun Microsystems, Inc.
  * All rights reserved.
  *
@@ -49,8 +53,17 @@ public class JavaParser
 
   ArrayList<String> VariableIdList= new ArrayList<String>();  // 변수명 저장 배열리스트
   ArrayList<String> strIdList= new ArrayList<String>();  // 문자열 변수명 저장 배열리스트
-  ArrayList<String> hardCodeArr= new ArrayList<String>(); // 하드코드에서 해당 변수명 있는지 비교하기위한 배열
-  ArrayList<String> sqlArr= new ArrayList<String>();
+  ArrayList<String> hardCodeArr= new ArrayList<String>(); // 하드코드에서 해당 변수명 있는지 비교하기위한 배열리스트
+  ArrayList<String> sqlArr= new ArrayList<String>(); // sql 인젝션 쿼리문에서사용한 변수명 저장 배열리스트
+  ArrayList<String> serializerArr = new ArrayList<String>(); //serializer 사용시 저장하는 배열리스트
+  ArrayList<String> permissionsArr = new ArrayList<String>();
+  
+  int serializerCnt = 0; //serializer 확인용 cnt
+  int startBodyCnt=0;//serializer body 진입시 cnt
+  int endBodyCnt=0;
+  int matcherLine = 0; //matcher 클래스 사용시컬럼 저장하는 변수
+  int normalizerLine = 0;  //normalizer 메소드 사용시 컬럼 변수
+  int permissionsStart=0;
    /**
     * Class to hold modifiers.
     */
@@ -1180,6 +1193,7 @@ void TypeDeclaration():
 void ClassOrInterfaceDeclaration(int modifiers):  // class나 interface 선언부분
 {
    boolean isInterface = false;
+   Token t1=null;
 }
 {
   ( "class" | "interface" { isInterface = true; } )
@@ -1204,9 +1218,16 @@ void ExtendsList(boolean isInterface): //extend 하고 인터페이스, 클래�
 }
 
 void ImplementsList(boolean isInterface):  // implement 하고 인터페이스, 클래스 선언하는 부분.
-{}
 {
-   "implements" ClassOrInterfaceType() // implements adfjk(), adfjk(), adfd()
+	Token t1=null;
+}
+{
+   "implements" t1=<IDENTIFIER> {
+	
+     serializerArr.add(t1.image); serializerCnt++; if(startBodyCnt!=endBodyCnt) {SerializerValue(t1); } }
+
+   [ LOOKAHEAD(2) TypeArguments() ]
+  ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
    ( "," ClassOrInterfaceType() )*
    {
       if (isInterface)
@@ -1233,7 +1254,8 @@ void EnumBody():
 }
 
 void EnumConstant():
-{}
+{
+}
 {
   Modifiers() <IDENTIFIER> [ Arguments() ] [ ClassOrInterfaceBody(false) ]
 }
@@ -1265,9 +1287,11 @@ void TypeBound():
 
 void ClassOrInterfaceBody(boolean isInterface):
 {
+  Token t1=null;
 }
 {
-  "{" ( ClassOrInterfaceBodyDeclaration(isInterface) )*"}"
+  t1="{"{ startBodyCnt++; /*System.out.println(t1.beginLine + "line  start"+startBodyCnt +",end"+endBodyCnt);*/} ( ClassOrInterfaceBodyDeclaration(isInterface) )* t1="}"
+  { endBodyCnt++; /*System.out.println(t1.beginLine + "line  start"+startBodyCnt+", end"+endBodyCnt);*/}
 }
 
 void ClassOrInterfaceBodyDeclaration(boolean isInterface):
@@ -1317,7 +1341,7 @@ void FieldDeclaration(int modifiers):
   
   Type() VariableDeclarator() ( "," VariableDeclarator() )* t1=";"
   {
-    if(modifiers==1||modifiers==17||modifiers==49||modifiers==33)  //1은 public,   17은 static public  49는 public static final, 33은 public final
+    if(modifiers==1||modifiers==17||modifiers==49||modifiers==33)  //1은 public,   17은 public static  49는 public static final, 33은 public final
     {
       
       System.out.println("Field Preventionion Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)" );
@@ -1374,9 +1398,23 @@ void MethodDeclaration(int modifiers):
 }
 //qwer
 void MethodDeclarator():
-{}
 {
-  <IDENTIFIER> FormalParameters() ( "[" "]" )*
+  Token t1=null;
+}
+{
+  t1=<IDENTIFIER>
+  {
+    if((t1.image).equals("main"))
+    {
+    		System.out.println("Debugging Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)");
+  	}
+  	if((t1.image).equals("getPermissions"))
+  	{
+  	  permissionsArr.add(t1.image);
+  	}
+  	
+  }
+  FormalParameters() ( "[" "]" )*
 }
 
 void FormalParameters():
@@ -1450,11 +1488,11 @@ void ReferenceType():
 
 void ClassOrInterfaceType():
 {
-Token t1;
+Token t1,t2=null;
  }
 {
   t1=<IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
-  ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
+  ( LOOKAHEAD(2) "." t2=<IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
   {
     //Random Prevention err
     if((t1.image).equals("Random"))
@@ -1469,9 +1507,17 @@ Token t1;
       System.out.println("NullPointerEx Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)");
     }
         
-         
-         
+    //Normalize Prevention err
+    if((t1.image).equals("Matcher"))
+    {
+      matcherLine = t1.beginLine;
     }
+    if((t1.image).equals("Permissions")&&permissionsStart==1)
+    {
+      System.out.println("GetPermissions Prevention Err"+"(at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)");
+    }
+    }
+    
   }
 
   //java.lang.String
@@ -1550,6 +1596,16 @@ void Name():
     {
       SQLValue(str2); //executeQuery라는 <IDENTIFIER >가 감지되면 SQLValue로 이동 
     }
+    if((str1.image).equals("Normalizer")&&str1.beginLine!=normalizerLine)
+    {
+      normalizerLine=str1.beginLine;
+      if(normalizerLine > matcherLine)
+      {
+        System.out.println("Normalizer Prevention Err"+"(at Line "+str1.beginLine+ ", Column "+str1.beginColumn+".)");
+        
+      }
+    }
+    
   })* 
 }
 
@@ -1922,9 +1978,10 @@ void LabeledStatement():
 }
 
 void Block():
-{}
 {
-  "{" ( BlockStatement() )* "}"
+}
+{
+  "{" { if(permissionsArr.isEmpty()!=true) { permissionsStart=1; permissionsArr.clear();}} ( BlockStatement() )* "}" { if(permissionsStart==1) { permissionsStart=0; } }
 }
 
 //qwerqwer
@@ -2006,7 +2063,9 @@ void IfStatement():
 }
 
 void WhileStatement():
-{}
+{
+	Token t1=null;
+}
 {
   "while" "(" Expression() ")" Statement()
 }
@@ -2270,4 +2329,21 @@ void SQLValue(Token t1):
 	 }
   }
   
+}
+
+void SerializerValue(Token t1):
+{
+ }
+{
+	{
+     	
+     	if(serializerCnt >1) { 
+		for(int i=0; i<serializerArr.size(); i++) {
+			if((serializerArr.get(i)).equals(t1.image))
+				{ System.out.println("Serializer Prevention Err (at Line "+t1.beginLine+ ", Column "+t1.beginColumn+".)");
+				startBodyCnt=1;endBodyCnt=0;}
+				break;
+			}
+		}
+     }
 }
