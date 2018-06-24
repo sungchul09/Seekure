@@ -1,4 +1,7 @@
-
+//wrap() 또는 duplicate() 메서드를 사용하여 만든 버퍼를 신뢰할 수 없는 코드에 노출시키지 마시오.
+//스트림에서 읽은 문자나 바이트를 –1과 구분하라.
+//xml
+//빼고 완료된 코드
 /* Copyright (c) 2006, Sun Microsystems, Inc.
  * All rights reserved.
  *
@@ -1603,32 +1606,24 @@ void Name():
  * by a ".*" when used in the context of an "ImportDeclaration".
  */
 {
-  Token str1;
+  Token str1=null;
   Token str2=null;
   Token t1=null;
 }
 {
-  str1=<IDENTIFIER> ( LOOKAHEAD(2) "." str2=<IDENTIFIER>
+  str1=<IDENTIFIER> ( LOOKAHEAD(2) str2="." str2=<IDENTIFIER>
   {
     {
       //Distinguish Prevention Err
-      if((str1.image).equals("read"))
-      {
-        byteArr.add(str1.beginLine);
-        if((byteArr.get(0)).equals(byteArr.get(1)))
-        {
-          System.out.println("Distinguish Prevention Err" +"(at Line "+str1.beginLine+ ", Column "+str1.beginColumn+".)");
-          byteArr.clear();
-        }
-      }
       if((str2.image).equals("read"))
       {
         byteArr.add(str2.beginLine);
         if((byteArr.get(0)).equals(byteArr.get(1)))
         {
           System.out.println("Distinguish Prevention Err" +"(at Line "+str2.beginLine+ ", Column "+str2.beginColumn+".)");
-          byteArr.clear();
         }
+      	byteArr.clear();
+      	byteArr.add(0);
       }
       //wrapDuplic
       wrapDuplicArr.clear();
@@ -1842,7 +1837,7 @@ void CastExpression():
 }
 {
   LOOKAHEAD("(" PrimitiveType2())
-  "(" t1=PrimitiveType2()")" { if((t1.image).equals("byte")) { byteArr.add(t1.beginLine); }} UnaryExpression()
+  "(" t1=PrimitiveType2()")" { if((t1.image).equals("byte")) { byteArr.clear(); byteArr.add(t1.beginLine); }} UnaryExpression()
 |
   "(" Type() ")" UnaryExpressionNotPlusMinus()
 }
